@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Календарь записей</title>
+
+  <!-- FullCalendar CSS -->
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar @6.1.10/index.min.css' rel='stylesheet' />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    a.back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    a.back-link:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">← Назад к форме записи</a>
+
+  <div class="container">
+    <h1 style="text-align:center;">Календарь записей</h1>
+    <div id="calendar"></div>
+  </div>
+
+  <!-- FullCalendar JS -->
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar @6.1.10/index.global.min.js'></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      const response = await fetch('/api/bookings');
+      const bookings = await response.json();
+
+      const events = bookings.map(booking => ({
+        title: `${booking.name} - ${booking.service}`,
+        start: booking.datetime,
+        backgroundColor: '#dc3545', // красный цвет
+        borderColor: '#dc3545',
+        textColor: '#fff'
+      }));
+
+      const calendarEl = document.getElementById('calendar');
+
+      new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        locale: 'ru',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        editable: false,
+        selectable: true,
+        selectMirror: true,
+        dayMaxEvents: true,
+        events: events
+      }).render();
+    });
+  </script>
+
+</body>
+</html>

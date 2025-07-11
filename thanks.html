@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Спасибо за запись</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .message {
+      text-align: center;
+      background: #d4edda;
+      color: #155724;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .buttons button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-back {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-view {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .buttons button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="message">
+    <h2>Спасибо за запись!</h2>
+    <p>Что вы хотите сделать дальше?</p>
+  </div>
+
+  <div class="buttons">
+    <button class="btn-back" onclick="window.location.href='index.html'">Записаться снова</button>
+    <button class="btn-view" onclick="window.location.href='admin.html'">Посмотреть все записи</button>
+  </div>
+
+</body>
+</html>
