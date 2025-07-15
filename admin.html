@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-панель</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .export-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    select,
+    button {
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-export {
+      background-color: #28a745;
+      color: white;
+    }
+
+    a.back-link {
+      display: inline-block;
+      margin: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ссылка назад -->
+  <a href="index.html" class="back-link">← Назад к форме записи</a>
+
+  <div class="container">
+    <h1>Админ-панель барбершопа</h1>
+
+    <!-- Блок выбора формата и кнопки -->
+    <div class="actions">
+      <div class="export-controls">
+        <label for="formatSelect">Выберите формат:</label>
+        <select id="formatSelect">
+          <option value="excel">Excel (.xlsx)</option>
+          <option value="json">JSON</option>
+          <option value="pdf">PDF</option>
+        </select>
+        <button onclick="exportData()" class="btn-export">📥 Выгрузить данные</button>
+      </div>
+    </div>
+
+    <!-- Таблица записей -->
+    <table id="bookingsTable">
+      <thead>
+        <tr>
+          <th>Имя</th>
+          <th>Услуга</th>
+          <th>Мастер</th>
+          <th>Цена</th>
+          <th>Дата и время</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Подключаем xlsx для Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js "></script>
+
+  <script>
+    async function loadBookings() {
+      try {
+        const response = await fetch('/api/bookings');
+        const bookings = await response.json();
+        const tbody = document.querySelector('#bookingsTable tbody');
+        tbody.innerHTML = '';
+
+        if (bookings.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6">Нет активных записей.</td></tr>';
+          return;
+        }
+
+        bookings.forEach(booking => {
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+            <td>${booking.name}</td>
+            <td>${booking.service}</td>
+            <td>${booking.master}</td>
+            <td>${booking.price} ₽</td>
+            <td>${new Date(booking.datetime).toLocaleString()}</td>
+            <td style="text-align:center;">
+              <button class="delete-btn" onclick='deleteBooking("${booking.name}", "${booking.datetime}")'>Отменить</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error('❌ Ошибка загрузки записей:', err);
+      }
+    }
+
+    async function deleteBooking(name, datetime) {
+      const confirmed = confirm(`Вы уверены, что хотите отменить запись ${name} на ${datetime}?`);
+      if (!confirmed) return;
+
+      const response = await fetch('/api/bookings', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': getAuthHeader()
+        },
+        body: JSON.stringify({ name, datetime })
+      });
+
+      if (response.ok) {
+        alert('Запись успешно отменена.');
+        loadBookings(); // Обновляем таблицу
+      } else {
+        alert('Ошибка при отмене записи.');
+      }
+    }
+
+    // --- Экспорт в Excel ---
+    function exportToExcel(bookings) {
+      const formatted = bookings.map(b => ({
+        Имя: b.name,
+        Услуга: b.service,
+        Мастер: b.master,
+        Цена: `${b.price} ₽`,
+        "Дата и время": new Date(b.datetime).toLocaleString()
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formatted);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Записи клиентов');
+      XLSX.writeFile(workbook, 'bookings.xlsx');
+    }
+
+    function exportToJSON(bookings) {
+      const jsonStr = JSON.stringify(bookings, null, 2);
+      downloadFile(jsonStr, 'bookings.json', 'application/json');
+    }
+
+    function exportToPDF(bookings) {
+      import('https://unpkg.com/jspdf @latest/dist/jspdf.umd.min.js').then(jsPDF => {
+        const doc = new jsPDF.default();
+
+        let y = 20;
+        doc.setFontSize(16);
+        doc.text("Записи клиентов", 14, y);
+
+        y += 10;
+        doc.setFontSize(12);
+        bookings.forEach((b, i) => {
+          doc.text(`${i + 1}. ${b.name} — ${b.service}, ${b.master}, ${b.price} ₽, ${new Date(b.datetime).toLocaleString()}`, 14, y += 10);
+        });
+
+        doc.save('bookings.pdf');
+      });
+    }
+
+    function downloadFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function exportData() {
+      const format = document.getElementById('formatSelect').value;
+
+      fetch('/api/bookings')
+        .then(res => res.json())
+        .then(bookings => {
+          switch (format) {
+            case 'excel':
+              exportToExcel(bookings);
+              break;
+            case 'json':
+              exportToJSON(bookings);
+              break;
+            case 'pdf':
+              exportToPDF(bookings);
+              break;
+            default:
+              alert('Выберите формат файла');
+          }
+        });
+    }
+
+    function getAuthHeader() {
+      const username = prompt('Введите логин администратора');
+      const password = prompt('Введите пароль администратора');
+
+      if (!username || !password) {
+        alert('Не введены логин или пароль');
+        return '';
+      }
+
+      const credentials = `${username}:${password}`;
+      return `Basic ${btoa(credentials)}`;
+    }
+
+    // Загрузка записей при открытии
+    window.onload = () => {
+      loadBookings();
+    };
+
+    // Автообновление каждые 10 секунд
+    setInterval(loadBookings, 10000);
+  </script>
+
+</body>
+</html>

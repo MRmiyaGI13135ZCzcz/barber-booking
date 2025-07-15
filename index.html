@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Запись в барбершоп</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .form-container {
+      background-color: #fff;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      margin: 40px auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .price-info {
+      font-weight: bold;
+      color: #28a745;
+      text-align: center;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+
+    .success-message {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th:last-child,
+    td:last-child {
+      text-align: center;
+    }
+
+    /* Стили для кнопок перехода */
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #6c757d;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-right: 10px;
+      transition: opacity 0.3s ease;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-admin {
+      background-color: #007bff;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h1>Запись в барбершоп</h1>
+
+    <form id="bookingForm">
+      <div class="form-group">
+        <label for="name">Имя:</label>
+        <input type="text" id="name" placeholder="Введите имя" required />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Телефон:</label>
+        <input type="tel" id="phone" placeholder="+7 (999) 999-99-99" required />
+      </div>
+
+      <div class="form-group">
+        <label for="service">Услуга:</label>
+        <select id="service" required>
+          <option value="">Выберите услугу</option>
+          <option value="Стрижка">Стрижка</option>
+          <option value="Бритьё">Бритьё</option>
+          <option value="Усы">Усы</option>
+          <option value="Мытье головы">Мытье головы</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="master">Мастер:</label>
+        <select id="master" required>
+          <option value="">Выберите мастера</option>
+          <option value="Михаил">Михаил</option>
+          <option value="Александр">Александр</option>
+          <option value="Дмитрий">Дмитрий</option>
+          <option value="Евгений">Евгений</option>
+          <option value="Анастасия">Анастасия</option>
+        </select>
+      </div>
+
+      <!-- Поле для отображения цены -->
+      <div class="price-info" id="priceDisplay">Цена: не указана</div>
+
+      <div class="form-group">
+        <label for="datetime">Дата и время:</label>
+        <input type="datetime-local" id="datetime" required />
+      </div>
+
+      <button type="submit">Записаться</button>
+    </form>
+
+    <!-- Кнопки перехода -->
+    <div style="text-align: center; margin-bottom: 20px;">
+      <a href="bookings.html" class="btn">👁️ Посмотреть все записи</a>
+      <a href="admin.html" class="btn btn-admin">📝 Экспорт данных</a>
+    </div>
+
+    <!-- Таблица всех записей -->
+    <h2 style="text-align: center;">Все записи:</h2>
+    <table id="bookingsTable">
+      <thead>
+        <tr>
+          <th>Имя</th>
+          <th>Услуга</th>
+          <th>Мастер</th>
+          <th>Цена</th>
+          <th>Дата и время</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="success-message" id="successMessage"></div>
+  </div>
+
+  <!-- Подключаем клиентский JS -->
+  <script src="app.js"></script>
+
+  <!-- Скрипты -->
+  <script>
+    // Функция загрузки записей
+    async function loadBookings() {
+      try {
+        const response = await fetch('/api/bookings');
+        const bookings = await response.json();
+        const tbody = document.querySelector('#bookingsTable tbody');
+        tbody.innerHTML = '';
+
+        if (bookings.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">Нет активных записей.</td></tr>';
+          return;
+        }
+
+        bookings.forEach(booking => {
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+            <td>${booking.name}</td>
+            <td>${booking.service}</td>
+            <td>${booking.master || '-'}</td>
+            <td>${booking.price || 0} ₽</td>
+            <td>${new Date(booking.datetime).toLocaleString()}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error('❌ Ошибка загрузки записей:', err);
+        const tbody = document.querySelector('#bookingsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="5">Ошибка загрузки данных.</td></tr>';
+      }
+    }
+
+    // Инициализация
+    window.onload = () => {
+      loadBookings(); // Загружаем при открытии
+    };
+
+    // Автообновление каждые 10 секунд
+    setInterval(loadBookings, 10000);
+  </script>
+
+</body>
+</html>
