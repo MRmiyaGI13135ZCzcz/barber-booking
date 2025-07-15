@@ -5,10 +5,10 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'bookings.json');
 
-// Админ-данные
+// Админ-данные (в реальном проекте используй .env)
 const ADMIN_CREDENTIALS = {
   username: 'admin',
   password: 'yourSecurePassword123'
@@ -64,7 +64,7 @@ app.post('/api/book', (req, res) => {
   }
 });
 
-// GET /api/bookings — получить все записи
+// GET /api/bookings — получить все записи (без защиты)
 app.get('/api/bookings', (req, res) => {
   try {
     const bookings = readBookings();
@@ -117,24 +117,9 @@ app.delete('/api/bookings', (req, res) => {
   }
 });
 
-// --- Статические страницы ---
-
 // Главная страница
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Все остальные .html файлы
-app.get('/*.html', (req, res) => {
-  const page = req.path.replace('.html', '');
-  const filePath = path.join(__dirname, `${page}.html`);
-
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) {
-      return res.status(404).send('Страница не найдена');
-    }
-    res.sendFile(filePath);
-  });
 });
 
 // Защита `/admin.html` через Basic Auth
@@ -150,11 +135,17 @@ app.get('/admin.html', (req, res) => {
   const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
   const [username, password] = credentials.split(':');
 
-  if (username !== ADMIN_CREDENTIALS.username || password !== ADMIN_CREDENTIALS.password) {
-    return res.status(401).send('Неверные данные');
+  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+  } else {
+    res.status(401).send('Неверные данные');
   }
+});
 
-  res.sendFile(path.join(__dirname, 'admin.html'));
+// Статические файлы (bookings.html и другие)
+app.get('/:page.html', (req, res) => {
+  const page = req.params.page;
+  res.sendFile(path.join(__dirname, `${page}.html`));
 });
 
 // Запуск сервера
