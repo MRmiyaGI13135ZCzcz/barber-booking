@@ -1,53 +1,4 @@
-// Форма
-document.getElementById('bookingForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-
-  const data = {
-    name: document.getElementById('name').value,
-    phone: document.getElementById('phone').value,
-    service: document.getElementById('service').value,
-    master: document.getElementById('master').value,
-    datetime: document.getElementById('datetime').value,
-    price: calculatePrice(
-      document.getElementById('service').value,
-      document.getElementById('master').value
-    )
-  };
-
-  if (!data.name || !data.phone || !data.service || !data.master || !data.datetime) {
-    const messageDiv = document.getElementById('successMessage');
-    messageDiv.style.color = 'red';
-    messageDiv.textContent = 'Пожалуйста, заполните все поля.';
-    return;
-  }
-
-  const response = await fetch('/api/book', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-
-  const messageDiv = document.getElementById('successMessage');
-
-  if (response.ok) {
-    messageDiv.style.color = 'green';
-    messageDiv.textContent = 'Вы успешно записались!';
-    this.reset();
-    document.getElementById('priceDisplay').textContent = 'Цена: не указана';
-
-    // Обновляем таблицу записей
-    if (typeof loadBookings === 'function') {
-      loadBookings();
-    }
-  } else {
-    messageDiv.style.color = 'red';
-    messageDiv.textContent = 'Ошибка при записи.';
-  }
-});
-
-// --- Расчёт цены ---
+// Расчёт цены
 const basePrices = {
   'Стрижка': 500,
   'Бритьё': 300,
@@ -80,6 +31,46 @@ function updatePrice() {
   priceDisplay.textContent = `Цена: ${price} руб.`;
 }
 
-// События изменения
 document.getElementById('service').addEventListener('change', updatePrice);
 document.getElementById('master').addEventListener('change', updatePrice);
+
+document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const data = {
+    name: document.getElementById('name').value,
+    phone: document.getElementById('phone').value,
+    service: document.getElementById('service').value,
+    master: document.getElementById('master').value,
+    datetime: document.getElementById('datetime').value,
+    price: calculatePrice(
+      document.getElementById('service').value,
+      document.getElementById('master').value
+    )
+  };
+
+  const messageDiv = document.getElementById('successMessage');
+
+  if (!data.name || !data.phone || !data.service || !data.master || !data.datetime) {
+    messageDiv.style.color = 'red';
+    messageDiv.textContent = 'Пожалуйста, заполните все поля.';
+    return;
+  }
+
+  const response = await fetch('/api/book', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  if (response.ok) {
+    messageDiv.style.color = 'green';
+    messageDiv.textContent = 'Вы успешно записались!';
+    this.reset();
+    document.getElementById('priceDisplay').textContent = 'Цена: не указана';
+    loadBookings();
+  } else {
+    messageDiv.style.color = 'red';
+    messageDiv.textContent = 'Ошибка при записи.';
+  }
+});

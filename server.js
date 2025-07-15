@@ -5,10 +5,10 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'bookings.json');
 
-// Админ-данные (в реальном проекте используй .env)
+// Админ-данные
 const ADMIN_CREDENTIALS = {
   username: 'admin',
   password: 'yourSecurePassword123'
@@ -29,8 +29,6 @@ function readBookings() {
 function writeBookings(bookings) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(bookings, null, 2));
 }
-
-// --- API ---
 
 // POST /api/book — добавление записи
 app.post('/api/book', (req, res) => {
@@ -64,7 +62,7 @@ app.post('/api/book', (req, res) => {
   }
 });
 
-// GET /api/bookings — получить все записи (без защиты)
+// GET /api/bookings — получить все записи
 app.get('/api/bookings', (req, res) => {
   try {
     const bookings = readBookings();
@@ -117,6 +115,19 @@ app.delete('/api/bookings', (req, res) => {
   }
 });
 
+// Раздача HTML-файлов
+app.get('/*.html', (req, res) => {
+  const page = req.path.replace('.html', '');
+  const filePath = path.join(__dirname, `${page}.html`);
+
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      return res.status(404).send('Страница не найдена');
+    }
+    res.sendFile(filePath);
+  });
+});
+
 // Главная страница
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -135,17 +146,11 @@ app.get('/admin.html', (req, res) => {
   const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
   const [username, password] = credentials.split(':');
 
-  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-    res.sendFile(path.join(__dirname, 'admin.html'));
-  } else {
-    res.status(401).send('Неверные данные');
+  if (username !== ADMIN_CREDENTIALS.username || password !== ADMIN_CREDENTIALS.password) {
+    return res.status(401).send('Неверные данные');
   }
-});
 
-// Статические файлы (bookings.html и другие)
-app.get('/:page.html', (req, res) => {
-  const page = req.params.page;
-  res.sendFile(path.join(__dirname, `${page}.html`));
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 // Запуск сервера

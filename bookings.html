@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -59,155 +58,20 @@
     .delete-btn:hover {
       background-color: #c82333;
     }
-  </style>
-</head>
-<body>
 
-  <div class="container">
-    <h1>Все записи клиентов</h1>
-
-    <!-- Таблица всех записей -->
-    <table id="bookingsTable">
-      <thead>
-        <tr>
-          <th>Имя</th>
-          <th>Услуга</th>
-          <th>Мастер</th>
-          <th>Цена</th>
-          <th>Дата и время</th>
-          <th>Действие</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <script>
-    async function loadBookings() {
-      try {
-        const response = await fetch('/api/bookings');
-        const bookings = await response.json();
-        const tbody = document.querySelector('#bookingsTable tbody');
-        tbody.innerHTML = '';
-
-        if (bookings.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6">Нет активных записей.</td></tr>';
-          return;
-        }
-
-        bookings.forEach(booking => {
-          const tr = document.createElement('tr');
-
-          tr.innerHTML = `
-            <td>${booking.name}</td>
-            <td>${booking.service}</td>
-            <td>${booking.master || '-'}</td>
-            <td>${booking.price || 0} ₽</td>
-            <td>${new Date(booking.datetime).toLocaleString()}</td>
-            <td style="text-align:center;">
-              <button class="delete-btn" onclick='deleteBooking("${booking.name}", "${booking.datetime}")'>Отменить</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-      } catch (err) {
-        console.error('❌ Ошибка загрузки записей:', err);
-        const tbody = document.querySelector('#bookingsTable tbody');
-        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных.</td></tr>';
-      }
-    }
-
-    async function deleteBooking(name, datetime) {
-      // Запрашиваем Basic Auth у пользователя
-      const username = prompt('Введите логин администратора');
-      const password = prompt('Введите пароль администратора');
-
-      const auth = btoa(`${username}:${password}`);
-
-      const response = await fetch('/api/bookings', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${auth}`
-        },
-        body: JSON.stringify({ name, datetime })
-      });
-
-      if (response.ok) {
-        alert('Запись успешно отменена.');
-        loadBookings(); // Обновляем таблицу
-      } else {
-        alert('Ошибка при удалении записи. Проверьте логин/пароль админа');
-      }
-    }
-
-    window.onload = () => {
-      loadBookings();
-    };
-  </script>
-
-</body>
-=======
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Все записи</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 40px;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #333;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-
-    th,
-    td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
+    a.back-link {
+      display: inline-block;
+      margin: 20px;
+      padding: 10px 20px;
       background-color: #007bff;
       color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
     }
 
-    .delete-btn {
-      padding: 6px 10px;
-      font-size: 12px;
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .delete-btn:hover {
-      background-color: #c82333;
+    a.back-link:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
@@ -216,7 +80,6 @@
   <div class="container">
     <h1>Все записи клиентов</h1>
 
-    <!-- Таблица всех записей -->
     <table id="bookingsTable">
       <thead>
         <tr>
@@ -225,7 +88,6 @@
           <th>Мастер</th>
           <th>Цена</th>
           <th>Дата и время</th>
-          <th>Действие</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -241,7 +103,7 @@
         tbody.innerHTML = '';
 
         if (bookings.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6">Нет активных записей.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5">Нет активных записей.</td></tr>';
           return;
         }
 
@@ -254,41 +116,13 @@
             <td>${booking.master || '-'}</td>
             <td>${booking.price || 0} ₽</td>
             <td>${new Date(booking.datetime).toLocaleString()}</td>
-            <td style="text-align:center;">
-              <button class="delete-btn" onclick='deleteBooking("${booking.name}", "${booking.datetime}")'>Отменить</button>
-            </td>
           `;
           tbody.appendChild(tr);
         });
 
       } catch (err) {
         console.error('❌ Ошибка загрузки записей:', err);
-        const tbody = document.querySelector('#bookingsTable tbody');
-        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных.</td></tr>';
-      }
-    }
-
-    async function deleteBooking(name, datetime) {
-      // Запрашиваем Basic Auth у пользователя
-      const username = prompt('Введите логин администратора');
-      const password = prompt('Введите пароль администратора');
-
-      const auth = btoa(`${username}:${password}`);
-
-      const response = await fetch('/api/bookings', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${auth}`
-        },
-        body: JSON.stringify({ name, datetime })
-      });
-
-      if (response.ok) {
-        alert('Запись успешно отменена.');
-        loadBookings(); // Обновляем таблицу
-      } else {
-        alert('Ошибка при удалении записи. Проверьте логин/пароль админа');
+        tbody.innerHTML = '<tr><td colspan="5">Ошибка загрузки данных.</td></tr>';
       }
     }
 
@@ -298,5 +132,4 @@
   </script>
 
 </body>
->>>>>>> 40f79e2bb53fe81e96191d2bb9bd84df0c0c8ef2
 </html>

@@ -86,13 +86,11 @@
 </head>
 <body>
 
-  <!-- Ссылка назад -->
   <a href="index.html" class="back-link">← Назад к форме записи</a>
 
   <div class="container">
     <h1>Админ-панель барбершопа</h1>
 
-    <!-- Блок выбора формата и кнопки -->
     <div class="actions">
       <div class="export-controls">
         <label for="formatSelect">Выберите формат:</label>
@@ -105,7 +103,6 @@
       </div>
     </div>
 
-    <!-- Таблица записей -->
     <table id="bookingsTable">
       <thead>
         <tr>
@@ -121,9 +118,7 @@
     </table>
   </div>
 
-  <!-- Подключаем xlsx для Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js "></script>
-
   <script>
     async function loadBookings() {
       try {
@@ -155,6 +150,7 @@
 
       } catch (err) {
         console.error('❌ Ошибка загрузки записей:', err);
+        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных.</td></tr>';
       }
     }
 
@@ -162,11 +158,16 @@
       const confirmed = confirm(`Вы уверены, что хотите отменить запись ${name} на ${datetime}?`);
       if (!confirmed) return;
 
+      const username = prompt('Логин администратора', 'admin');
+      const password = prompt('Пароль администратора', 'yourSecurePassword123');
+
+      const auth = btoa(`${username}:${password}`);
+
       const response = await fetch('/api/bookings', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': getAuthHeader()
+          'Authorization': `Basic ${auth}`
         },
         body: JSON.stringify({ name, datetime })
       });
@@ -175,11 +176,16 @@
         alert('Запись успешно отменена.');
         loadBookings(); // Обновляем таблицу
       } else {
-        alert('Ошибка при отмене записи.');
+        alert('Ошибка при отмене записи. Проверьте логин/пароль');
       }
     }
 
-    // --- Экспорт в Excel ---
+    window.onload = () => {
+      loadBookings();
+    };
+
+    // --- Экспорт ---
+
     function exportToExcel(bookings) {
       const formatted = bookings.map(b => ({
         Имя: b.name,
@@ -248,28 +254,6 @@
           }
         });
     }
-
-    function getAuthHeader() {
-      const username = prompt('Введите логин администратора');
-      const password = prompt('Введите пароль администратора');
-
-      if (!username || !password) {
-        alert('Не введены логин или пароль');
-        return '';
-      }
-
-      const credentials = `${username}:${password}`;
-      return `Basic ${btoa(credentials)}`;
-    }
-
-    // Загрузка записей при открытии
-    window.onload = () => {
-      loadBookings();
-    };
-
-    // Автообновление каждые 10 секунд
-    setInterval(loadBookings, 10000);
   </script>
-
 </body>
 </html>
